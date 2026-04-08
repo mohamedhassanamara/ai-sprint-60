@@ -1,0 +1,21 @@
+[
+  {
+    "name": "Sarah Connor",
+    "email": "sarah.connor@sky.net",
+    "age": 33
+  },
+  {
+    "name": "John Doe",
+    "age": 45
+  },
+  {
+    "name": "Jane Smith",
+    "email": "jane.smith@domain.com",
+    "age": "twenty"
+  },
+  {
+    "name": "Bob Formatting",
+    "email": "bob-at-domain.com",
+    "age": 29
+  }
+]
