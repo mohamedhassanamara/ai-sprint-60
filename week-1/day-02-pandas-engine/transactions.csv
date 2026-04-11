@@ -1,0 +1,6 @@
+tx_id,user_id,amount,tx_date,status
+1,101,250.50,2023-04-01,completed
+2,101,NaN,2023-04-05,refunded
+3,103,120.00,2023-04-02,completed
+4,106,85.00,2023-04-03,completed
+5,102,1500.75,2023-04-10,completed

@@ -1,0 +1,6 @@
+user_id,name,region,join_date
+101,Sarah Connor,North America,2023-01-15
+102,John Doe,Europe,2023-03-22
+103,Jane Smith,,2023-02-28
+104,Bob Formatting,Asia,2023-01-05
+105,Alice Error,Europe,invalid_date

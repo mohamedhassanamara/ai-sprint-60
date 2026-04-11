@@ -1,0 +1,17 @@
+[
+    {
+        "region":"Europe",
+        "total_revenue":1500.75,
+        "unique_users":1
+    },
+    {
+        "region":"North America",
+        "total_revenue":435.75,
+        "unique_users":1
+    },
+    {
+        "region":"Unknown",
+        "total_revenue":205.0,
+        "unique_users":2
+    }
+]
