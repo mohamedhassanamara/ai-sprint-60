@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineering Cheat Sheet - Day 4</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        code { font-family: 'Fira Code', monospace; font-size: 0.85em; }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .card { break-inside: avoid; border: 1px solid #e2e8f0; box-shadow: none !important; }
+            #main-container { padding: 0; max-width: 100%; }
+        }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .gradient-text { background: linear-gradient(to right, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="main-container" class="max-w-6xl mx-auto p-6 md:p-10">
+
+        <!-- Header -->
+        <div class="flex justify-between items-end border-b-2 border-slate-200 pb-6 mb-8">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Day 4: <span class="gradient-text">Classification</span></h1>
+                <p class="text-slate-500 mt-2">LogReg, Confusion Matrices, Trees, and Forests</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="printer" class="w-5 h-5"></i> Print Sheet
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- 1. Logistic Regression -->
+            <div class="card border-t-4 border-t-blue-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">1. Logistic Regression & Probabilities</h3>
+                <p class="text-sm text-slate-600 mb-3">Uses the Sigmoid curve to squash outputs between 0.0 and 1.0. Perfect for binary targets (Win/Loss, Healthy/Injured).</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.linear_model import LogisticRegression
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Hard prediction (0 or 1) based on a threshold (default 0.5)
+hard_pred = model.predict(X_new)
+
+# Raw probabilities [Probability of 0, Probability of 1]
+probs = model.predict_proba(X_new)</code></pre>
+                </div>
+            </div>
+
+            <!-- 2. The Confusion Matrix -->
+            <div class="card border-t-4 border-t-rose-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">2. The Confusion Matrix</h3>
+                <p class="text-sm text-slate-600 mb-3">Accuracy is a trap on imbalanced datasets. Use the matrix to track exact error types.</p>
+                <ul class="text-sm space-y-2 mb-3 text-slate-700">
+                    <li><strong>TP (True Positive):</strong> Correctly predicted the target.</li>
+                    <li><strong>TN (True Negative):</strong> Correctly predicted the baseline.</li>
+                    <li><strong>FP (False Positive):</strong> False Alarm (Type I Error).</li>
+                    <li><strong class="text-red-600">FN (False Negative):</strong> The Miss (Type II Error - usually the most dangerous).</li>
+                </ul>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_true, y_pred)</code></pre>
+                </div>
+            </div>
+
+            <!-- 3. Classification Metrics -->
+            <div class="card border-t-4 border-t-purple-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">3. Precision, Recall, & F1</h3>
+                <ul class="text-sm space-y-2 mb-3 text-slate-700">
+                    <li><strong>Precision:</strong> "Quality" - When I call a positive, am I right? Reduces FP.</li>
+                    <li><strong>Recall:</strong> "Quantity" - Did I catch all the actual positives? Reduces FN.</li>
+                    <li><strong>F1-Score:</strong> The harmonic mean (balance) of Precision and Recall.</li>
+                </ul>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.metrics import classification_report
+
+# Generates a complete table of Precision, Recall, and F1
+report = classification_report(y_true, y_pred)
+print(report)</code></pre>
+                </div>
+            </div>
+
+            <!-- 4. Trees and Forests -->
+            <div class="card border-t-4 border-t-emerald-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">4. Trees & Random Forests</h3>
+                <ul class="text-sm space-y-2 mb-3 text-slate-700">
+                    <li><strong>Decision Tree:</strong> Fast, logical, but highly prone to Overfitting. Limit depth to protect it.</li>
+                    <li><strong>Random Forest:</strong> An ensemble of trees. Each gets a random subset of data and features. Their majority vote cancels out individual errors.</li>
+                </ul>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.ensemble import RandomForestClassifier
+
+# n_estimators = number of trees in the forest
+model = RandomForestClassifier(n_estimators=100, max_depth=5)
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)</code></pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script> lucide.createIcons(); </script>
+</body>
+</html>

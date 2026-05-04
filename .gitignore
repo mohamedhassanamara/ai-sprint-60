@@ -1,0 +1,99 @@
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+share/python-wheels/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDEs and editors
+.idea/
+*.iml
+.vscode/
+# PyCharm project files
+/.idea/
+
+# macOS
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+local_settings.py
+secrets.json
+
+# Logs and runtime files
+*.log
+*.out
+*.err
+
+
+# Databases
+*.sqlite3
+*.db
+
+# Generic
+*.bak
+*~
+*.swp
+
+# Optional: ignore common model/serialized artifacts (uncomment if you don't want to commit trained models)
+#*.joblib
+#*.pkl
+#*.sav
+#*.h5
+
+# Node / frontend (not used in this project but commonly added)
+node_modules/
+
+# Notebook checkpoints (already above but keep for clarity)
+.ipynb_checkpoints
+
+# End of file
+

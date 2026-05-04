@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineering Cheat Sheet - Day 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        code { font-family: 'Fira Code', monospace; font-size: 0.85em; }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .card { break-inside: avoid; border: 1px solid #e2e8f0; box-shadow: none !important; }
+            #main-container { padding: 0; max-width: 100%; }
+        }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .gradient-text { background: linear-gradient(to right, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="main-container" class="max-w-6xl mx-auto p-6 md:p-10">
+
+        <!-- Header -->
+        <div class="flex justify-between items-end border-b-2 border-slate-200 pb-6 mb-8">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Day 5: <span class="gradient-text">Unsupervised Learning</span></h1>
+                <p class="text-slate-500 mt-2">K-Means, The Elbow Method, and PCA Compression</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="printer" class="w-5 h-5"></i> Print Sheet
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- 1. K-Means Clustering -->
+            <div class="card border-t-4 border-t-blue-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">1. K-Means Clustering</h3>
+                <p class="text-sm text-slate-600 mb-3">Groups unlabelled data into <em>K</em> distinct clusters by minimizing the distance between points and their Centroids. There is NO <code>y</code> variable!</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.cluster import KMeans
+
+# Initialize with desired number of clusters
+kmeans = KMeans(n_clusters=3, random_state=42)
+
+# Fit the model AND get the group labels instantly
+labels = kmeans.fit_predict(X_scaled)</code></pre>
+                </div>
+            </div>
+
+            <!-- 2. The Elbow Method -->
+            <div class="card border-t-4 border-t-rose-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">2. The Elbow Method (Finding K)</h3>
+                <p class="text-sm text-slate-600 mb-3">Tests multiple values of K to find the optimal balance point (the "elbow" of the graph) where diminishing returns begin.</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code># Loop through K=1 to K=10
+inertia_scores = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k)
+    kmeans.fit(X_scaled)
+    # Append the calculated Inertia score
+    inertia_scores.append(kmeans.inertia_)
+
+# Plot inertia_scores to find the 'Elbow'</code></pre>
+                </div>
+            </div>
+
+            <!-- 3. PCA -->
+            <div class="card border-t-4 border-t-emerald-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">3. PCA (Dimensionality Reduction)</h3>
+                <p class="text-sm text-slate-600 mb-3">Squashes high-dimensional data (e.g., 50 stats) down to a lower dimension (e.g., 2D) so humans can visualize the clusters.</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.decomposition import PCA
+
+# Tell PCA we want 2 total components (PC1, PC2)
+pca = PCA(n_components=2)
+
+# Squash the data
+X_2D = pca.fit_transform(X_scaled)</code></pre>
+                </div>
+            </div>
+
+            <!-- 4. Mandatory Scaling -->
+            <div class="card border-t-4 border-t-amber-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">4. Mandatory Scaling</h3>
+                <p class="text-sm text-slate-600 mb-3"><strong>Golden Rule:</strong> You MUST scale your data before using PCA or K-Means. Because they rely on physical geometry and variance, large numbers (like Salaries) will completely destroy the math if left unscaled.</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.preprocessing import StandardScaler
+
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_raw)
+
+# Now pass X_scaled into PCA and KMeans</code></pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script> lucide.createIcons(); </script>
+</body>
+</html>

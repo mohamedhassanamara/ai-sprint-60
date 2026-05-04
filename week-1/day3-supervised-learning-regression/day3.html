@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Engineering Cheat Sheet - Day 3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        code { font-family: 'Fira Code', monospace; font-size: 0.85em; }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .card { break-inside: avoid; border: 1px solid #e2e8f0; box-shadow: none !important; }
+            #main-container { padding: 0; max-width: 100%; }
+        }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .gradient-text { background: linear-gradient(to right, #ef4444, #f97316); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div id="main-container" class="max-w-6xl mx-auto p-6 md:p-10">
+
+        <div class="flex justify-between items-end border-b-2 border-slate-200 pb-6 mb-8">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Day 3: <span class="gradient-text">Supervised Learning</span></h1>
+                <p class="text-slate-500 mt-2">Regression, Splitting, Scaling, and Evaluation</p>
+            </div>
+            <button onclick="window.print()" class="no-print bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+                <i data-lucide="printer" class="w-5 h-5"></i> Print Sheet
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <div class="card border-t-4 border-t-blue-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">1. The Standard scikit-learn API</h3>
+                <p class="text-sm text-slate-600 mb-3">Almost all models follow this identical 3-step process. <strong>X</strong> must be a 2D matrix. <strong>y</strong> is a 1D vector.</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.linear_model import LinearRegression
+
+# 1. Initialize
+model = LinearRegression()
+
+# 2. Train (Learn weights and bias)
+model.fit(X_train, y_train)
+
+# 3. Predict (Apply math to new data)
+predictions = model.predict(X_new)</code></pre>
+                </div>
+            </div>
+
+            <div class="card border-t-4 border-t-green-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">2. Train/Test Split (Preventing Leakage)</h3>
+                <p class="text-sm text-slate-600 mb-3"><strong>Golden Rule:</strong> Never evaluate a model on data it has already seen. Always shuffle and split.</p>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.model_selection import train_test_split
+
+# test_size=0.2 creates an 80/20 split
+# random_state=42 locks the random seed for reproducibility
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="card border-t-4 border-t-purple-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">3. Grading the Model (Metrics)</h3>
+                <ul class="text-sm space-y-2 mb-3 text-slate-700">
+                    <li><strong>MAE (Mean Absolute Error):</strong> Average error in exact units (e.g., £ Millions).</li>
+                    <li><strong>MSE (Mean Squared Error):</strong> Squares the errors. Violently punishes massive outliers.</li>
+                    <li><strong>R² Score:</strong> Percentage score (0.0 to 1.0) of how well the model predicts vs just guessing the mean.</li>
+                </ul>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.metrics import mean_absolute_error, r2_score
+
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)</code></pre>
+                </div>
+            </div>
+
+            <div class="card border-t-4 border-t-amber-500">
+                <h3 class="text-lg font-bold mb-3 border-b pb-2">4. Scaling & Regularization</h3>
+                <ul class="text-sm space-y-2 mb-3 text-slate-700">
+                    <li><strong>StandardScaler:</strong> Levels the playing field (Mean=0, StdDev=1). Prevent Leakage: <code>fit_transform</code> on train, <code>transform</code> on test!</li>
+                    <li><strong>Ridge (L2):</strong> Shrinks large weights to prevent overfitting to one feature.</li>
+                    <li><strong>Lasso (L1):</strong> Forces useless feature weights to exactly 0 (Automatic Feature Selection).</li>
+                </ul>
+                <div class="bg-slate-800 text-slate-100 p-3 rounded-md overflow-x-auto text-sm">
+                    <pre><code>from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Ridge
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test) # NEVER FIT HERE
+
+model = Ridge(alpha=5.0) # alpha = penalty strength
+model.fit(X_train_scaled, y_train)</code></pre>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script> lucide.createIcons(); </script>
+</body>
+</html>
