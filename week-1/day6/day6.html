@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 14: Unsupervised Learning — Clustering & Dimensionality Reduction | 60-Day AI Engineering Masterclass</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:wght@700;800;900&display=swap');
+
+        :root {
+            --pitch-green: #1B7A3D;
+            --pitch-green-light: #2A9D4E;
+            --pitch-green-pale: #E8F5EC;
+            --pitch-green-glow: #D0F0D8;
+            --deep-navy: #0A1628;
+            --slate-blue: #1E3A5F;
+            --text-primary: #0F1A2E;
+            --text-secondary: #3D4F6F;
+            --text-muted: #6B7FA3;
+            --bg-white: #FFFFFF;
+            --bg-offwhite: #F7F9FC;
+            --bg-light: #EEF2F7;
+            --bg-card: #FFFFFF;
+            --border-light: #D8E2EF;
+            --border-subtle: #E8EDF5;
+            --accent-gold: #D4A017;
+            --accent-red: #C0392B;
+            --accent-orange: #E67E22;
+            --accent-purple: #6C3483;
+            --shadow-sm: 0 1px 3px rgba(10, 22, 40, 0.06);
+            --shadow-md: 0 4px 12px rgba(10, 22, 40, 0.08);
+            --shadow-lg: 0 8px 30px rgba(10, 22, 40, 0.10);
+            --shadow-card: 0 2px 8px rgba(10, 22, 40, 0.05), 0 8px 24px rgba(10, 22, 40, 0.06);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-offwhite);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .handbook-container {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* ─── HERO HEADER ─── */
+        .hero-header {
+            background: linear-gradient(135deg, var(--deep-navy) 0%, var(--slate-blue) 50%, var(--pitch-green) 100%);
+            border-radius: var(--radius-xl);
+            padding: 50px 45px;
+            margin-bottom: 35px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        .hero-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 500px;
+            height: 500px;
+            border: 2px solid rgba(255,255,255,0.06);
+            border-radius: 50%;
+        }
+        .hero-header::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 350px;
+            height: 350px;
+            border: 1.5px solid rgba(255,255,255,0.04);
+            border-radius: 50%;
+        }
+        .hero-day-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #FFFFFF;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 5px 16px;
+            border-radius: 20px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            font-weight: 900;
+            color: #FFFFFF;
+            line-height: 1.15;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-subtitle {
+            font-size: 17px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.75);
+            max-width: 650px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-meta {
+            margin-top: 24px;
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-meta-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.5px;
+        }
+        .hero-meta-item span { color: var(--pitch-green-glow); font-weight: 600; }
+
+        /* ─── TABLE OF CONTENTS ─── */
+        .toc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 32px 36px;
+            margin-bottom: 35px;
+            box-shadow: var(--shadow-sm);
+        }
+        .toc-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--pitch-green);
+            margin-bottom: 18px;
+        }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 30px;
+        }
+        .toc-item {
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            padding: 5px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .toc-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--pitch-green);
+            background: var(--pitch-green-pale);
+            width: 26px;
+            height: 26px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        /* ─── CONCEPT CARDS ─── */
+        .concept-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 40px 42px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+        }
+        .concept-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            background: linear-gradient(90deg, var(--pitch-green), var(--pitch-green-light));
+        }
+        .concept-card.accent-navy::before {
+            background: linear-gradient(90deg, var(--deep-navy), var(--slate-blue));
+        }
+        .concept-card.accent-purple::before {
+            background: linear-gradient(90deg, var(--accent-purple), #8E44AD);
+        }
+        .concept-card.accent-gold::before {
+            background: linear-gradient(90deg, var(--accent-gold), #F39C12);
+        }
+        .concept-card.accent-red::before {
+            background: linear-gradient(90deg, var(--accent-red), #E74C3C);
+        }
+        .concept-card.accent-orange::before {
+            background: linear-gradient(90deg, var(--accent-orange), #F39C12);
+        }
+
+        .section-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--pitch-green);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .concept-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .concept-subtitle {
+            font-size: 15px;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+            font-style: italic;
+        }
+        .concept-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        .concept-body strong { color: var(--text-primary); }
+
+        /* ─── FOOTBALL ANALOGY BOX ─── */
+        .football-analogy {
+            background: linear-gradient(135deg, var(--pitch-green-pale) 0%, #F0FAF3 100%);
+            border: 1px solid #C6E8D0;
+            border-left: 4px solid var(--pitch-green);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin: 22px 0;
+        }
+        .football-analogy-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--pitch-green);
+            margin-bottom: 8px;
+        }
+        .football-analogy-title::before { content: '⚽ '; }
+        .football-analogy p {
+            font-size: 14.5px;
+            color: #1A5C2E;
+            line-height: 1.75;
+            margin-bottom: 0 !important;
+        }
+
+        /* ─── MATH BLOCK ─── */
+        .math-block {
+            background: var(--bg-offwhite);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 24px 28px;
+            margin: 22px 0;
+            overflow-x: auto;
+        }
+        .math-block-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--slate-blue);
+            margin-bottom: 14px;
+        }
+        .math-block-title::before { content: '∑ '; }
+
+        /* ─── CODE BLOCK ─── */
+        .code-block {
+            background: #0D1B2A;
+            border-radius: var(--radius-md);
+            padding: 24px 28px;
+            margin: 22px 0;
+            overflow-x: auto;
+            position: relative;
+        }
+        .code-block-label {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .code-block pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13.5px;
+            line-height: 1.65;
+            color: #C8D6E5;
+        }
+        .code-block .comment { color: #5C7A99; }
+        .code-block .keyword { color: #6DB3F2; }
+        .code-block .string { color: #98C379; }
+        .code-block .function { color: #E5C07B; }
+        .code-block .number { color: #D19A66; }
+        .code-block .class { color: #E06C75; }
+        .code-block .decorator { color: #C678DD; }
+
+        /* ─── MERMAID DIAGRAMS ─── */
+        .diagram-container {
+            background: var(--bg-offwhite);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin: 22px 0;
+            text-align: center;
+        }
+        .diagram-container .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .diagram-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        /* ─── ASCII DIAGRAMS ─── */
+        .ascii-diagram {
+            background: #F8FAFD;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 22px 26px;
+            margin: 22px 0;
+            overflow-x: auto;
+        }
+        .ascii-diagram pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: var(--slate-blue);
+            margin: 0;
+        }
+
+        /* ─── INFO BOXES ─── */
+        .info-box {
+            border-radius: var(--radius-md);
+            padding: 18px 22px;
+            margin: 18px 0;
+            font-size: 14.5px;
+        }
+        .info-box.key-insight {
+            background: #FFF8E1;
+            border: 1px solid #FFE082;
+            border-left: 4px solid var(--accent-gold);
+            color: #6D5200;
+        }
+        .info-box.warning {
+            background: #FDECEA;
+            border: 1px solid #F5C6CB;
+            border-left: 4px solid var(--accent-red);
+            color: #721C24;
+        }
+        .info-box-label {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 6px;
+        }
+
+        /* ─── INTERVIEW VAULT ─── */
+        .interview-vault {
+            background: var(--bg-card);
+            border: 2px solid var(--deep-navy);
+            border-radius: var(--radius-lg);
+            padding: 40px 42px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-card);
+        }
+        .interview-vault::before { display: none; }
+        .vault-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+        .vault-icon {
+            background: var(--deep-navy);
+            color: #FFF;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .vault-title-block .vault-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--deep-navy);
+        }
+        .vault-title-block .vault-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .interview-qa {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+        .interview-q {
+            background: var(--bg-light);
+            padding: 16px 22px;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-light);
+        }
+        .interview-q::before {
+            content: 'Q: ';
+            color: var(--pitch-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        .interview-a {
+            padding: 18px 22px;
+            font-size: 14.5px;
+            color: var(--text-secondary);
+            line-height: 1.75;
+            background: var(--bg-card);
+        }
+        .interview-a::before {
+            content: '💬 Senior Engineer: ';
+            font-weight: 700;
+            color: var(--slate-blue);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ─── FOOTER ─── */
+        .handbook-footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        .handbook-footer .footer-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-width: 768px) {
+            .handbook-container { padding: 12px; }
+            .hero-header { padding: 30px 24px; }
+            .hero-title { font-size: 28px; }
+            .concept-card { padding: 28px 22px; }
+            .toc-grid { grid-template-columns: 1fr; }
+            .interview-vault { padding: 28px 22px; }
+        }
+    </style>
+</head>
+<body>
+<div class="handbook-container">
+
+    <!-- ═══════════════════ HERO HEADER ═══════════════════ -->
+    <header class="hero-header">
+        <div class="hero-day-badge">Day 14 of 60</div>
+        <h1 class="hero-title">Unsupervised Learning<br>Clustering & Dimensionality Reduction</h1>
+        <p class="hero-subtitle">Finding hidden structure in unlabeled data—grouping similar players without a coach's guidance, and compressing the scouting report to what truly matters.</p>
+        <div class="hero-meta">
+            <span class="hero-meta-item">Module: <span>Unsupervised ML</span></span>
+            <span class="hero-meta-item">Topics: <span>9 Core Concepts</span></span>
+            <span class="hero-meta-item">Depth: <span>Math + Code + Intuition</span></span>
+        </div>
+    </header>
+
+    <!-- ═══════════════════ TABLE OF CONTENTS ═══════════════════ -->
+    <nav class="toc-card">
+        <div class="toc-title">Today's Playbook</div>
+        <div class="toc-grid">
+            <div class="toc-item"><span class="toc-num">1</span> K-Means Clustering</div>
+            <div class="toc-item"><span class="toc-num">2</span> K-Means Mathematics</div>
+            <div class="toc-item"><span class="toc-num">3</span> Hierarchical Clustering</div>
+            <div class="toc-item"><span class="toc-num">4</span> DBSCAN</div>
+            <div class="toc-item"><span class="toc-num">5</span> Curse of Dimensionality & PCA</div>
+            <div class="toc-item"><span class="toc-num">6</span> PCA Mathematics</div>
+            <div class="toc-item"><span class="toc-num">7</span> t-SNE</div>
+            <div class="toc-item"><span class="toc-num">8</span> UMAP</div>
+            <div class="toc-item"><span class="toc-num">9</span> The Unsupervised Pipeline</div>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════ SECTION 1: K-MEANS ═══════════════════ -->
+    <article class="concept-card">
+        <div class="section-number">Section 01</div>
+        <h2 class="concept-title">K-Means Clustering</h2>
+        <p class="concept-subtitle">The Algorithm Mechanics: Initialization → Assignment → Update → Iterate</p>
+
+        <div class="concept-body">
+            <p>K-Means is the workhorse of clustering algorithms. It partitions $n$ data points into $K$ non-overlapping groups (clusters) by iteratively refining cluster center positions called <strong>centroids</strong>. The algorithm is elegantly simple: place $K$ centroids, assign each point to its nearest centroid, move each centroid to the mean of its assigned points, and repeat until convergence.</p>
+
+            <p>The four phases of K-Means operate as follows:</p>
+
+            <p><strong>1. Initialization:</strong> Select $K$ initial centroid positions. The naive approach is random selection from the data points. The improved method, <strong>K-Means++</strong>, chooses initial centroids that are spread out: the first is random, subsequent centroids are chosen with probability proportional to $D(x)^2$, the squared distance to the nearest existing centroid. This dramatically reduces bad initializations.</p>
+
+            <p><strong>2. Assignment Step:</strong> For each data point $x_i$, compute its Euclidean distance to all $K$ centroids and assign it to the cluster whose centroid is nearest:</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">Euclidean Distance</div>
+            $$d(x_i, \mu_k) = \sqrt{\sum_{j=1}^{p} (x_{ij} - \mu_{kj})^2}$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:10px;">where $x_i$ is data point $i$, $\mu_k$ is centroid $k$, $p$ is number of features, and $j$ indexes each feature dimension.</p>
+        </div>
+
+        <div class="concept-body">
+            <p><strong>3. Update Step:</strong> Recompute each centroid as the arithmetic mean of all points currently assigned to that cluster: $\mu_k^{(new)} = \frac{1}{|C_k|}\sum_{x_i \in C_k} x_i$.</p>
+
+            <p><strong>4. Iteration:</strong> Repeat steps 2–3 until centroids stop moving (or move less than a tolerance $\epsilon$), or a maximum iteration count is reached. Convergence is guaranteed because WCSS decreases monotonically at each step.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">K-Means Algorithm Flow — Lloyd's Iteration</div>
+            <div class="mermaid">
+            flowchart LR
+                A["🎯 Initialize K<br>Centroids<br>(random or K-Means++)"] --> B["📐 Assignment Step<br>Assign each x_i to<br>nearest centroid μ_k"]
+                B --> C["📊 Update Step<br>Recompute μ_k =<br>mean(points in C_k)"]
+                C --> D{"Centroids<br>converged?"}
+                D -->|"No"| B
+                D -->|"Yes"| E["✅ Final Clusters<br>Output K groups<br>with labels"]
+                style A fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E
+                style B fill:#FFF8E1,stroke:#D4A017,color:#0F1A2E
+                style C fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+                style D fill:#FDECEA,stroke:#C0392B,color:#0F1A2E
+                style E fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Imagine you're a newly hired academy director at a club with 200 unsigned youth midfielders. You've never seen them play. You tell 3 assistant coaches (K=3) to each stand somewhere on the training pitch. Every midfielder walks to the nearest coach. Each coach then walks to the center of their group and yells "regroup!" The midfielders shuffle again. After a few rounds, the coaches stop moving—you now have three natural groups: your deep-lying playmakers, your box-to-box engines, and your creative number 10s. No one labeled them; the structure emerged from the data itself.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> KMeans
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># Player features: [goals_per_90, tackles_per_90, pass_completion%]</span>
+X_players = np.array([
+    [<span class="number">0.8</span>, <span class="number">1.2</span>, <span class="number">78</span>], [<span class="number">0.6</span>, <span class="number">1.5</span>, <span class="number">75</span>], [<span class="number">0.9</span>, <span class="number">0.9</span>, <span class="number">82</span>],  <span class="comment"># B2B midfielders</span>
+    [<span class="number">1.8</span>, <span class="number">0.3</span>, <span class="number">70</span>], [<span class="number">2.1</span>, <span class="number">0.2</span>, <span class="number">68</span>], [<span class="number">1.7</span>, <span class="number">0.4</span>, <span class="number">72</span>],  <span class="comment"># Strikers</span>
+    [<span class="number">0.1</span>, <span class="number">3.2</span>, <span class="number">85</span>], [<span class="number">0.0</span>, <span class="number">3.5</span>, <span class="number">88</span>], [<span class="number">0.2</span>, <span class="number">2.9</span>, <span class="number">83</span>],  <span class="comment"># Defenders</span>
+])
+
+<span class="comment"># K-Means with K=3, using K-Means++ initialization</span>
+kmeans = KMeans(n_clusters=<span class="number">3</span>, init=<span class="string">'k-means++'</span>, n_init=<span class="number">10</span>, random_state=<span class="number">42</span>)
+labels = kmeans.fit_predict(X_players)
+
+<span class="keyword">print</span>(<span class="string">"Cluster assignments:"</span>, labels)
+<span class="keyword">print</span>(<span class="string">"Centroids:\n"</span>, kmeans.cluster_centers_)
+<span class="keyword">print</span>(<span class="string">"Inertia (WCSS):"</span>, kmeans.inertia_)</pre>
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 2: K-MEANS MATH ═══════════════════ -->
+    <article class="concept-card accent-navy">
+        <div class="section-number">Section 02</div>
+        <h2 class="concept-title">K-Means Mathematics</h2>
+        <p class="concept-subtitle">Lloyd's Algorithm, WCSS (Inertia), and the Elbow Method</p>
+
+        <div class="concept-body">
+            <p><strong>Lloyd's Algorithm</strong> is the formal name for the standard K-Means procedure. Formally, it minimizes the <strong>Within-Cluster Sum of Squares (WCSS)</strong>, also called <strong>Inertia</strong>. This objective function measures total compactness: how close each point is to its own cluster's centroid.</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">WCSS (Inertia) — The K-Means Objective Function</div>
+            $$J = \text{WCSS} = \sum_{k=1}^{K} \sum_{x_i \in C_k} \| x_i - \mu_k \|^2$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:10px;">where $K$ = number of clusters, $C_k$ = set of points in cluster $k$, $\mu_k$ = centroid of cluster $k$, and $\|.\|^2$ = squared Euclidean distance.</p>
+        </div>
+
+        <div class="concept-body">
+            <p>K-Means is an <strong>NP-hard</strong> optimization problem in general, but Lloyd's algorithm provides an efficient heuristic. Each iteration reduces $J$ monotonically—the assignment step finds the best cluster for each point given fixed centroids, and the update step finds the best centroid given fixed assignments. The algorithm converges to a <strong>local minimum</strong>, hence the importance of multiple random restarts (<code>n_init</code>).</p>
+
+            <p><strong>The Elbow Method</strong> for selecting $K$: Plot WCSS against $K = 1, 2, 3, \ldots$ The curve always decreases (adding more clusters always reduces within-cluster variance), but there is typically a sharp "elbow" where additional clusters yield diminishing returns. The $K$ at the elbow is a reasonable choice.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">Elbow Method — WCSS vs. Number of Clusters K</div>
+            <div class="mermaid">
+            graph LR
+                subgraph ElbowCurve["WCSS (Inertia) Decreasing as K Increases"]
+                    K1["K=1<br>WCSS=850"] --> K2["K=2<br>WCSS=420"]
+                    K2 --> K3["K=3<br>WCSS=180 🔴<br>ELBOW"]
+                    K3 --> K4["K=4<br>WCSS=155"]
+                    K4 --> K5["K=5<br>WCSS=145"]
+                    K5 --> K6["K=6<br>WCSS=140"]
+                end
+                style K1 fill:#FDECEA,stroke:#C0392B,color:#0F1A2E
+                style K2 fill:#FFF8E1,stroke:#D4A017,color:#0F1A2E
+                style K3 fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E,stroke-width:3px
+                style K4 fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+                style K5 fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+                style K6 fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Think of WCSS as the average "confusion" within each positional group. If you only have K=1 group (everyone is "midfielder"), confusion is enormous—goalkeepers mixed with wingers. At K=4 (GK, DEF, MID, FWD), confusion drops sharply. At K=15 (inverted full-back, mezzala, regista, etc.), each additional role barely reduces confusion because you're splitting hairs. The elbow—around K=4 for standard positions—is where the clarity-per-role gain plateaus.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="comment"># Elbow Method: plotting WCSS for K=1..10</span>
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+wcss_values = []
+K_range = <span class="function">range</span>(<span class="number">1</span>, <span class="number">11</span>)
+
+<span class="keyword">for</span> k <span class="keyword">in</span> K_range:
+    km = KMeans(n_clusters=k, init=<span class="string">'k-means++'</span>, n_init=<span class="number">10</span>, random_state=<span class="number">42</span>)
+    km.fit(X_scaled)  <span class="comment"># always use scaled features!</span>
+    wcss_values.append(km.inertia_)
+
+plt.plot(K_range, wcss_values, <span class="string">'bo-'</span>, linewidth=<span class="number">2</span>)
+plt.xlabel(<span class="string">'Number of Clusters (K)'</span>)
+plt.ylabel(<span class="string">'WCSS (Inertia)'</span>)
+plt.title(<span class="string">'Elbow Method for Optimal K'</span>)
+plt.axvline(x=<span class="number">3</span>, color=<span class="string">'r'</span>, linestyle=<span class="string">'--'</span>, label=<span class="string">'Elbow at K=3'</span>)
+plt.legend()
+plt.show()</pre>
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 3: HIERARCHICAL ═══════════════════ -->
+    <article class="concept-card accent-purple">
+        <div class="section-number">Section 03</div>
+        <h2 class="concept-title">Hierarchical Clustering</h2>
+        <p class="concept-subtitle">Agglomerative (Bottom-Up) Tree Building, Dendrograms, and Linkage Criteria</p>
+
+        <div class="concept-body">
+            <p><strong>Agglomerative Hierarchical Clustering</strong> takes the opposite approach from K-Means: instead of pre-specifying $K$, it builds an entire tree of nested clusterings. Start with $n$ singleton clusters (each point is its own cluster), then iteratively merge the two "closest" clusters until everything is in one cluster. The result is a <strong>dendrogram</strong>—a tree diagram that records every merge and the distance at which it occurred.</p>
+
+            <p>The critical design choice is the <strong>linkage criterion</strong>—how you measure "distance" between two clusters $A$ and $B$:</p>
+
+            <p><strong>Single Linkage (MIN):</strong> $d(A, B) = \min_{a \in A, b \in B} d(a, b)$. Distance between the two nearest members. Creates long, chained clusters. Vulnerable to the "chaining effect."</p>
+
+            <p><strong>Complete Linkage (MAX):</strong> $d(A, B) = \max_{a \in A, b \in B} d(a, b)$. Distance between the two farthest members. Produces compact, roughly equal-sized clusters but is sensitive to outliers.</p>
+
+            <p><strong>Ward's Method:</strong> Merges the two clusters that result in the smallest increase in total within-cluster variance (WCSS). Tends to produce similarly sized, spherical clusters—often the best default choice.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">Agglomerative Clustering — Bottom-Up Merge Process</div>
+            <div class="mermaid">
+            flowchart TB
+                subgraph Step0["Step 0: Each player = 1 cluster"]
+                    A["Salah"] 
+                    B["Mbappé"] 
+                    C["Van Dijk"]
+                    D["Rüdiger"]
+                    E["De Bruyne"]
+                end
+                subgraph Step1["Step 1: Merge nearest pair"]
+                    CD["Van Dijk<br>+ Rüdiger<br>d=0.3"]
+                    A1["Salah"]
+                    B1["Mbappé"]
+                    E1["De Bruyne"]
+                end
+                subgraph Step2["Step 2: Merge next"]
+                    AB["Salah<br>+ Mbappé<br>d=0.5"]
+                    CD2["Van Dijk<br>+ Rüdiger"]
+                    E2["De Bruyne"]
+                end
+                subgraph Step3["Step 3: Continue"]
+                    ABE["Salah + Mbappé<br>+ De Bruyne<br>d=0.9"]
+                    CD3["Van Dijk<br>+ Rüdiger"]
+                end
+                subgraph Step4["Step 4: Single cluster"]
+                    ALL["All 5 Players<br>d=1.8"]
+                end
+                Step0 --> Step1 --> Step2 --> Step3 --> Step4
+                style CD fill:#E8F5EC,stroke:#1B7A3D
+                style AB fill:#FFF8E1,stroke:#D4A017
+                style ABE fill:#EBF5FB,stroke:#1E3A5F
+                style ALL fill:#F5EEF8,stroke:#6C3483
+            </div>
+        </div>
+
+        <div class="ascii-diagram">
+            <pre>
+  DENDROGRAM (Cutting at distance = 1.0 gives K=2 clusters)
+  
+  Distance
+  1.8 ─────────────────────────────┐
+                                   │
+  0.9 ──────────────┐              │
+                    │              │
+  0.5 ─────┐       │              │
+           │       │              │
+  0.3 ─┐   │   ┌───┘          ┌───┘
+       │   │   │              │
+      VVD RÜD SAL  MBP  KDB  │
+      ├───┤   ├───┤   │      │
+      └─DEF─┘ └─ATT────┘      │
+        Cluster 1    Cluster 2──┘
+  
+  ✂ Cut here ─────────────────── yields 2 groups: Defenders vs Attackers
+            </pre>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Picture a pre-season tournament where 20 unknown trialists must form teams. Initially, each player stands alone. The manager says: "The two most similar players, pair up." Van Dijk and Rüdiger, both tall aerial centre-backs, group first. Then Salah and Mbappé, both pacey wide forwards. Groups keep merging. The dendrogram is the manager's clipboard recording every merge. He can "cut" the tree at any height—cut high for 2 broad groups (attackers vs. defenders), cut low for 6 fine-grained positional roles.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> scipy.cluster.hierarchy <span class="keyword">import</span> dendrogram, linkage
+<span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> AgglomerativeClustering
+
+<span class="comment"># Build linkage matrix using Ward's method</span>
+Z = linkage(X_scaled, method=<span class="string">'ward'</span>, metric=<span class="string">'euclidean'</span>)
+
+<span class="comment"># Plot the dendrogram</span>
+plt.figure(figsize=(<span class="number">10</span>, <span class="number">6</span>))
+dendrogram(Z, labels=player_names, leaf_rotation=<span class="number">45</span>)
+plt.title(<span class="string">"Player Similarity Dendrogram (Ward's Linkage)"</span>)
+plt.ylabel(<span class="string">'Distance'</span>)
+plt.axhline(y=<span class="number">5.0</span>, color=<span class="string">'r'</span>, linestyle=<span class="string">'--'</span>, label=<span class="string">'Cut for K=3'</span>)
+plt.show()
+
+<span class="comment"># Or use sklearn for flat clustering</span>
+agg = AgglomerativeClustering(n_clusters=<span class="number">3</span>, linkage=<span class="string">'ward'</span>)
+labels = agg.fit_predict(X_scaled)</pre>
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 4: DBSCAN ═══════════════════ -->
+    <article class="concept-card accent-red">
+        <div class="section-number">Section 04</div>
+        <h2 class="concept-title">DBSCAN</h2>
+        <p class="concept-subtitle">Density-Based Spatial Clustering: ε-Radius, MinSamples, Core/Border/Noise</p>
+
+        <div class="concept-body">
+            <p><strong>DBSCAN (Density-Based Spatial Clustering of Applications with Noise)</strong> discovers clusters of arbitrary shape based on density—regions of high point concentration separated by low-density voids. Unlike K-Means, it doesn't require specifying $K$ and can identify <strong>noise points</strong> (outliers) that belong to no cluster.</p>
+
+            <p>DBSCAN has two hyperparameters:</p>
+            <p><strong>ε (epsilon):</strong> The radius of the neighborhood around each point.</p>
+            <p><strong>MinPts (min_samples):</strong> The minimum number of points required within the ε-neighborhood for a point to be classified as a <strong>core point</strong>.</p>
+
+            <p>Every data point is classified into one of three categories:</p>
+            <p><strong>Core Point:</strong> Has ≥ MinPts neighbors within its ε-ball (including itself). These form the dense hearts of clusters.</p>
+            <p><strong>Border Point:</strong> Falls within ε of a core point but doesn't have MinPts neighbors itself. It's on the edge of a cluster.</p>
+            <p><strong>Noise Point:</strong> Neither core nor border. An outlier, labeled as -1.</p>
+
+            <p>The algorithm: (1) find all core points, (2) form clusters by connecting core points that are within ε of each other (density-reachable), (3) assign border points to the nearest core point's cluster, (4) label everything else as noise.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">DBSCAN Point Classification — ε=0.5, MinPts=4</div>
+            <div class="mermaid">
+            flowchart TD
+                A["For each point p<br>in dataset"] --> B["Count neighbors<br>within ε radius"]
+                B --> C{"neighbors<br>≥ MinPts?"}
+                C -->|"Yes"| D["🟢 CORE POINT<br>Dense cluster seed"]
+                C -->|"No"| E{"Within ε of<br>any core point?"}
+                E -->|"Yes"| F["🟡 BORDER POINT<br>Cluster edge member"]
+                E -->|"No"| G["🔴 NOISE POINT<br>Outlier (label = -1)"]
+                D --> H["Connect density-<br>reachable core points<br>into clusters"]
+                F --> H
+                H --> I["✅ Final Clusters<br>+ Identified Outliers"]
+                style D fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E
+                style F fill:#FFF8E1,stroke:#D4A017,color:#0F1A2E
+                style G fill:#FDECEA,stroke:#C0392B,color:#0F1A2E
+                style I fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+            </div>
+        </div>
+
+        <div class="ascii-diagram">
+            <pre>
+    DBSCAN Spatial View (ε=0.5, MinPts=3)
+    ────────────────────────────────────
+    
+           ●  ●                  Noise ✕
+          ● ●● ●               ✕
+           ● ●                           ✕
+          Cluster 1                    
+      (dense region)         ○ ●  ●
+                            ● ●● ● ●
+                             ● ● ●
+                            Cluster 2
+    
+    ● = Core point (≥3 neighbors in ε-ball)
+    ○ = Border point (within ε of core, but <3 neighbors)
+    ✕ = Noise point (isolated outlier)
+            </pre>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Imagine a GPS heatmap of every Premier League player's positional data over a season. K-Means would force every player into exactly K groups, even if some roam uniquely. DBSCAN is smarter: it finds clusters where players crowd together (the "parking the bus" cluster of deep-block CBs, the "pressing trap" cluster of high-line forwards). The truly unique players—the Messi who drifts everywhere, the goalkeeper who plays as sweeper in positions no one else occupies—get labeled as <strong>noise</strong>. That's not failure; it's DBSCAN correctly saying "this player doesn't fit any archetype," which is valuable scouting intelligence.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> DBSCAN
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+
+<span class="comment"># CRITICAL: always scale before DBSCAN (distance-based!)</span>
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_players)
+
+<span class="comment"># eps=0.5 means ε-neighborhood radius, min_samples=5</span>
+db = DBSCAN(eps=<span class="number">0.5</span>, min_samples=<span class="number">5</span>)
+labels = db.fit_predict(X_scaled)
+
+n_clusters = <span class="function">len</span>(<span class="function">set</span>(labels)) - (<span class="number">1</span> <span class="keyword">if</span> -<span class="number">1</span> <span class="keyword">in</span> labels <span class="keyword">else</span> <span class="number">0</span>)
+n_noise = <span class="function">list</span>(labels).count(-<span class="number">1</span>)
+<span class="keyword">print</span>(<span class="string">f"Clusters found: <span class="number">{n_clusters}</span>, Noise points: <span class="number">{n_noise}</span>"</span>)</pre>
+        </div>
+
+        <div class="info-box key-insight">
+            <div class="info-box-label">💡 Key Insight</div>
+            To tune ε, use a <strong>k-distance plot</strong>: compute the distance to the k-th nearest neighbor for each point (where k = MinPts), sort these distances, and look for an elbow. The ε at the elbow is a good starting point.
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 5: CURSE & PCA PHILOSOPHY ═══════════════════ -->
+    <article class="concept-card accent-gold">
+        <div class="section-number">Section 05</div>
+        <h2 class="concept-title">The Curse of Dimensionality & PCA</h2>
+        <p class="concept-subtitle">Why High Dimensions Break Everything, and the Philosophy of Variance Maximization</p>
+
+        <div class="concept-body">
+            <p><strong>The Curse of Dimensionality</strong> describes a set of phenomena that arise in high-dimensional spaces which don't occur in lower dimensions. As the number of features $p$ grows:</p>
+
+            <p><strong>1. Distance concentration:</strong> All pairwise distances converge—the nearest neighbor and farthest neighbor become approximately equidistant. This destroys K-Means and KNN algorithms that rely on meaningful distance contrasts.</p>
+
+            <p><strong>2. Volume explosion:</strong> Data becomes sparse. To maintain statistical density, the amount of data needed grows <em>exponentially</em> with dimensions. A dataset of 1000 points feels "dense" in 2D but becomes hopelessly sparse in 500D.</p>
+
+            <p><strong>3. Feature redundancy:</strong> Many real-world features are correlated. A footballer's "total passes" and "pass completion count" carry overlapping information.</p>
+
+            <p><strong>Principal Component Analysis (PCA)</strong> is a linear dimensionality reduction technique that addresses this. Its philosophy: find new axes (principal components) along which the data has <strong>maximum variance</strong>. The first PC captures the most variance, the second captures the most remaining variance while being orthogonal to the first, and so on. You then keep only the top $d \ll p$ components, discarding the rest as noise.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">PCA Conceptual Flow — Projecting from High-D to Low-D</div>
+            <div class="mermaid">
+            flowchart LR
+                A["📋 Raw Data<br>50 scouting features<br>(p=50 dimensions)"] --> B["📐 Standardize<br>Mean=0, Var=1<br>per feature"]
+                B --> C["🔢 Compute<br>Covariance Matrix<br>Σ (50×50)"]
+                C --> D["🧮 Eigendecomposition<br>Find eigenvectors &<br>eigenvalues of Σ"]
+                D --> E["📊 Sort by<br>Eigenvalue magnitude<br>λ₁ ≥ λ₂ ≥ ... ≥ λ₅₀"]
+                E --> F["✂️ Keep Top d<br>Components<br>(e.g., d=2)"]
+                F --> G["🎯 Projected Data<br>2D representation<br>preserving ~90% variance"]
+                style A fill:#FDECEA,stroke:#C0392B
+                style C fill:#FFF8E1,stroke:#D4A017
+                style D fill:#F5EEF8,stroke:#6C3483
+                style G fill:#E8F5EC,stroke:#1B7A3D
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Your scouting database tracks 50 metrics per player: goals, xG, tackles, interceptions, aerial duels, progressive carries, through balls, pressures, etc. Good luck visualizing a 50D point cloud. PCA is like a brilliant chief scout who says: "Look, 80% of the variation across all players can be summarized on two axes: <em>Attacking Output</em> (a weighted combo of goals, xG, key passes) and <em>Defensive Workrate</em> (tackles, pressures, interceptions). Let's just plot every player on those two axes." You go from 50 numbers to 2—and suddenly you can literally <em>see</em> the gap in your squad for a ball-progressing defender.</p>
+        </div>
+
+        <div class="info-box warning">
+            <div class="info-box-label">⚠️ Critical Warning</div>
+            PCA is a linear method. It finds the best linear projection. If the meaningful structure in your data lies along a curved manifold (e.g., players arranged in an arc in feature space), PCA will fail. That's where t-SNE and UMAP come in.
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 6: PCA MATHEMATICS ═══════════════════ -->
+    <article class="concept-card accent-navy">
+        <div class="section-number">Section 06</div>
+        <h2 class="concept-title">PCA Mathematics</h2>
+        <p class="concept-subtitle">The Covariance Matrix, Eigendecomposition, Eigenvectors, and Eigenvalues</p>
+
+        <div class="concept-body">
+            <p>PCA's math is beautiful. Given a centered data matrix $X$ with $n$ samples and $p$ features (each column has mean 0 after standardization):</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">Step 1 — The Covariance Matrix</div>
+            $$\Sigma = \frac{1}{n-1} X^T X$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">$\Sigma$ is a $p \times p$ symmetric matrix. Entry $\Sigma_{ij}$ measures the covariance between features $i$ and $j$. Diagonal entries are variances.</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">Step 2 — Eigendecomposition</div>
+            $$\Sigma \, v_k = \lambda_k \, v_k$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">Solve for $p$ eigenvector-eigenvalue pairs $(v_k, \lambda_k)$. Each <strong>eigenvector $v_k$</strong> (principal component direction) defines a new axis in feature space. Each <strong>eigenvalue $\lambda_k$</strong> tells you the variance captured along that axis.</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">Step 3 — Variance Explained</div>
+            $$\text{Explained Variance Ratio}_k = \frac{\lambda_k}{\sum_{j=1}^{p} \lambda_j}$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">If λ₁=4.2, λ₂=1.8, λ₃=0.3, ..., then PC1 explains 4.2/(4.2+1.8+0.3+...) of total variance.</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">Step 4 — Projection</div>
+            $$X_{\text{reduced}} = X \cdot W_d$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">where $W_d = [v_1 | v_2 | \ldots | v_d]$ is the $p \times d$ matrix of the top $d$ eigenvectors. The result is your data in $d$ dimensions.</p>
+        </div>
+
+        <div class="ascii-diagram">
+            <pre>
+    PCA Eigendecomposition Walkthrough (p=3 features → d=2)
+    ════════════════════════════════════════════════════════
+    
+    Covariance Matrix Σ (3×3):       Eigendecomposition:
+    ┌                      ┐         ┌────────────────────────┐
+    │ Var(x₁)  Cov(x₁,x₂) Cov(x₁,x₃) │    λ₁ = 5.2  →  v₁ = [0.58, 0.71, 0.41]  (PC1)
+    │ Cov(x₂,x₁) Var(x₂)  Cov(x₂,x₃) │    λ₂ = 1.8  →  v₂ = [−0.44, 0.12, 0.89] (PC2)
+    │ Cov(x₃,x₁) Cov(x₃,x₂) Var(x₃)  │    λ₃ = 0.3  →  v₃ = [0.69, −0.69, 0.22] (PC3) ✂️ discard
+    └                      ┘         └────────────────────────┘
+    
+    Variance explained: PC1 = 5.2/7.3 = 71%  |  PC2 = 1.8/7.3 = 25%  |  Cumulative = 96% ✓
+    
+    Projection matrix W₂ = [ v₁ | v₂ ]   (3×2)
+    X_reduced = X · W₂                    (n×3) · (3×2) = (n×2) ✓
+            </pre>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>The eigenvectors are like the "master axes of player variation." PC1 might correspond to an attacking-vs-defending axis (eigenvector heavily weighted on goals, xG, key passes positively and tackles negatively). PC2 might be a possession-vs-directness axis. The eigenvalues tell you how much spread exists along each axis: if λ₁ is 10x bigger than λ₂, almost all meaningful difference between players is captured by that single attacking-vs-defending dimension. The projection is literally remapping every player from their 50-stat scouting profile to a 2D coordinate on a tactical scatter plot.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># Step 1: Standardize (CRITICAL for PCA)</span>
+scaler = StandardScaler()
+X_std = scaler.fit_transform(X_players)
+
+<span class="comment"># Step 2: Fit PCA</span>
+pca = PCA(n_components=<span class="number">2</span>)
+X_pca = pca.fit_transform(X_std)
+
+<span class="comment"># Inspect results</span>
+<span class="keyword">print</span>(<span class="string">"Principal Components (eigenvectors):"</span>)
+<span class="keyword">print</span>(pca.components_)          <span class="comment"># shape: (2, p) — loadings</span>
+<span class="keyword">print</span>(<span class="string">"Eigenvalues:"</span>, pca.explained_variance_)
+<span class="keyword">print</span>(<span class="string">"Variance explained:"</span>, pca.explained_variance_ratio_)
+<span class="keyword">print</span>(<span class="string">"Cumulative:"</span>, np.cumsum(pca.explained_variance_ratio_))
+
+<span class="comment"># X_pca is now (n_players × 2) — ready for visualization or clustering</span></pre>
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 7: t-SNE ═══════════════════ -->
+    <article class="concept-card accent-purple">
+        <div class="section-number">Section 07</div>
+        <h2 class="concept-title">t-SNE</h2>
+        <p class="concept-subtitle">Non-Linear Dimensionality Reduction via Probability Distributions and Local Neighborhood Preservation</p>
+
+        <div class="concept-body">
+            <p><strong>t-Distributed Stochastic Neighbor Embedding (t-SNE)</strong> is a non-linear technique designed specifically for <strong>visualization</strong> of high-dimensional data in 2D or 3D. Unlike PCA, which preserves global variance through linear projections, t-SNE focuses on preserving <strong>local neighborhoods</strong>—points that are close in high-D should remain close in low-D.</p>
+
+            <p><strong>How it works:</strong></p>
+
+            <p><strong>Step 1 — High-D Probabilities:</strong> For each pair of points $(x_i, x_j)$ in the original space, compute a probability $p_{ij}$ that represents how likely $x_j$ is to be picked as $x_i$'s neighbor, using a Gaussian kernel centered on $x_i$:</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">t-SNE — High-D Conditional Probability</div>
+            $$p_{j|i} = \frac{\exp\left(-\|x_i - x_j\|^2 / 2\sigma_i^2\right)}{\sum_{k \neq i} \exp\left(-\|x_i - x_k\|^2 / 2\sigma_i^2\right)}$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">$\sigma_i$ is set per point such that the effective number of neighbors matches the user-specified <strong>perplexity</strong>.</p>
+        </div>
+
+        <div class="concept-body">
+            <p><strong>Step 2 — Low-D Probabilities:</strong> In the embedding space, use a <strong>Student's t-distribution</strong> (with 1 degree of freedom) instead of a Gaussian:</p>
+        </div>
+
+        <div class="math-block">
+            <div class="math-block-title">t-SNE — Low-D Student-t Probability</div>
+            $$q_{ij} = \frac{(1 + \|y_i - y_j\|^2)^{-1}}{\sum_{k \neq l} (1 + \|y_k - y_l\|^2)^{-1}}$$
+            <p style="font-size:13px; color:#6B7FA3; margin-top:8px;">The heavy tails of the t-distribution allow dissimilar points to be pushed far apart in the embedding, alleviating the "crowding problem."</p>
+        </div>
+
+        <div class="concept-body">
+            <p><strong>Step 3 — Minimize KL Divergence:</strong> Optimize the positions $y_i$ using gradient descent to minimize the Kullback-Leibler divergence between $P$ and $Q$: $KL(P \| Q) = \sum_{i \neq j} p_{ij} \log \frac{p_{ij}}{q_{ij}}$.</p>
+
+            <p><strong>Perplexity</strong> (typical range: 5–50) controls the effective number of local neighbors each point considers. Low perplexity = tight local focus, high perplexity = broader neighborhood. It's roughly interpretable as "the number of close neighbors each point has."</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">t-SNE Processing Pipeline</div>
+            <div class="mermaid">
+            flowchart LR
+                A["🔢 High-D Data<br>(n × 50)"] --> B["📐 Pairwise Distances<br>Gaussian → P matrix<br>(n × n probabilities)"]
+                B --> C["🎲 Random Init<br>Low-D embedding<br>(n × 2)"]
+                C --> D["📊 t-Distribution<br>→ Q matrix<br>(n × n probabilities)"]
+                D --> E["🎯 Gradient Descent<br>Minimize KL(P‖Q)<br>Move points in 2D"]
+                E --> F{"Converged?"}
+                F -->|"No"| D
+                F -->|"Yes"| G["✅ 2D Embedding<br>Local structure<br>preserved"]
+                style A fill:#F5EEF8,stroke:#6C3483
+                style B fill:#FFF8E1,stroke:#D4A017
+                style E fill:#E8F5EC,stroke:#1B7A3D
+                style G fill:#E8F5EC,stroke:#1B7A3D
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>Think of t-SNE as arranging player profile cards on a physical tactics board. You can't represent 50 stats in 2D perfectly, so t-SNE makes a promise: "Players who are <em>similar</em> in the full 50D will sit next to each other on this board. Players who are different will be pushed apart." The perplexity is like the scout's field of view—set it to 5 and you get very tight micro-clusters (all left-footed Argentine inside forwards huddle together), set it to 50 and you get broader groupings (all attackers loosely clump). The key limitation: <strong>distances between clusters are meaningless.</strong> If Cluster A is 3 inches from Cluster B on the board, that doesn't mean those player types are similar. Only within-cluster proximity is trustworthy.</p>
+        </div>
+
+        <div class="info-box warning">
+            <div class="info-box-label">⚠️ t-SNE Caveats</div>
+            t-SNE is for visualization only, not as a preprocessing step for downstream ML. It's non-parametric (can't transform new data), stochastic (different runs give different layouts), and global distances are not preserved. Always run with multiple perplexity values and random seeds to validate structure.
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> sklearn.manifold <span class="keyword">import</span> TSNE
+
+<span class="comment"># Perplexity ≈ expected local neighbors (try 5, 30, 50)</span>
+tsne = TSNE(n_components=<span class="number">2</span>, perplexity=<span class="number">30</span>, 
+            learning_rate=<span class="number">200</span>, n_iter=<span class="number">1000</span>, random_state=<span class="number">42</span>)
+X_tsne = tsne.fit_transform(X_std)
+
+plt.scatter(X_tsne[:, <span class="number">0</span>], X_tsne[:, <span class="number">1</span>], c=position_labels, cmap=<span class="string">'Set2'</span>, s=<span class="number">50</span>)
+plt.title(<span class="string">'t-SNE: Player Archetypes in 2D'</span>)
+plt.xlabel(<span class="string">'t-SNE 1'</span>); plt.ylabel(<span class="string">'t-SNE 2'</span>)
+plt.show()</pre>
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 8: UMAP ═══════════════════ -->
+    <article class="concept-card accent-orange">
+        <div class="section-number">Section 08</div>
+        <h2 class="concept-title">UMAP</h2>
+        <p class="concept-subtitle">Uniform Manifold Approximation & Projection: Topology, Local vs. Global, n_neighbors & min_dist</p>
+
+        <div class="concept-body">
+            <p><strong>UMAP</strong> (Uniform Manifold Approximation and Projection) is a newer non-linear dimensionality reduction technique that is generally faster than t-SNE, scales better, and—crucially—preserves more <strong>global structure</strong> while still capturing local neighborhoods.</p>
+
+            <p>UMAP is grounded in <strong>topological data analysis</strong> and <strong>Riemannian geometry</strong>. The intuition: the data lies on a manifold (a curved surface) embedded in high-D space. UMAP approximates this manifold by building a weighted k-neighbor graph, then optimizes a low-D layout that preserves the topological structure of that graph.</p>
+
+            <p><strong>Key hyperparameters:</strong></p>
+
+            <p><strong><code>n_neighbors</code></strong> (default 15): Controls the local-vs-global balance. Small values (5–10) preserve fine micro-structure (tight clusters, many small groups). Large values (50–200) capture broader macro-structure (fewer, larger groupings, more global topology). This is analogous to t-SNE's perplexity but UMAP's global preservation is superior.</p>
+
+            <p><strong><code>min_dist</code></strong> (default 0.1): Controls how tightly points are packed in the embedding. Small values (0.0–0.1) produce dense, clumpy clusters—great for identifying discrete groups. Large values (0.5–1.0) spread points out, preserving the continuous nature of the data—useful when you expect a spectrum rather than categories.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">UMAP: Effect of Hyperparameters on Embedding</div>
+            <div class="mermaid">
+            graph TB
+                subgraph Params["UMAP Hyperparameter Grid"]
+                    subgraph LowN["n_neighbors = 5"]
+                        A["Many small<br>tight clusters<br>Micro-structure"]
+                    end
+                    subgraph MedN["n_neighbors = 15"]
+                        B["Balanced<br>local + global<br>DEFAULT"]
+                    end
+                    subgraph HighN["n_neighbors = 100"]
+                        C["Few large<br>broad groups<br>Macro-structure"]
+                    end
+                end
+                subgraph Dist["min_dist Effect"]
+                    D["min_dist = 0.0<br>Points packed tightly<br>Sharp cluster boundaries"] 
+                    E["min_dist = 0.5<br>Points spread out<br>Continuous spectrum"]
+                end
+                style A fill:#E8F5EC,stroke:#1B7A3D
+                style B fill:#FFF8E1,stroke:#D4A017,stroke-width:2px
+                style C fill:#EBF5FB,stroke:#1E3A5F
+                style D fill:#FDECEA,stroke:#C0392B
+                style E fill:#F5EEF8,stroke:#6C3483
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>UMAP is like the ultimate scouting visualization wall. With <code>n_neighbors=5</code>, you zoom into hyper-specific niches: left-footed deep-lying playmakers who press from the front vs. right-footed ones who sit deep. With <code>n_neighbors=100</code>, you zoom out and see the grand structure: attackers here, midfielders there, defenders over there—like looking at a tactical formation from a blimp. <code>min_dist</code> controls the "stickiness" of player cards on the wall: set to 0.0 and similar players overlap into tight archetypes; set to 0.5 and they spread out, revealing the smooth spectrum from "pure 9" to "false 9" to "withdrawn forward" rather than forcing discrete buckets. The killer advantage over t-SNE: the distance <em>between</em> clusters on a UMAP plot is roughly meaningful—if your defenders cluster is far from your strikers cluster, that really means they're very different.</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="comment"># pip install umap-learn</span>
+<span class="keyword">import</span> umap
+
+<span class="comment"># UMAP with sensible defaults for player clustering</span>
+reducer = umap.UMAP(
+    n_neighbors=<span class="number">15</span>,    <span class="comment"># local vs global balance</span>
+    min_dist=<span class="number">0.1</span>,       <span class="comment"># tightness of clusters</span>
+    n_components=<span class="number">2</span>,     <span class="comment"># embed into 2D</span>
+    metric=<span class="string">'euclidean'</span>,
+    random_state=<span class="number">42</span>
+)
+X_umap = reducer.fit_transform(X_std)
+
+<span class="comment"># UMAP can also transform new data (unlike t-SNE!)</span>
+X_new_umap = reducer.transform(X_new_players_scaled)
+
+plt.scatter(X_umap[:, <span class="number">0</span>], X_umap[:, <span class="number">1</span>], c=labels, cmap=<span class="string">'Spectral'</span>, s=<span class="number">40</span>)
+plt.title(<span class="string">'UMAP: Player Embedding'</span>)
+plt.show()</pre>
+        </div>
+
+        <div class="info-box key-insight">
+            <div class="info-box-label">💡 UMAP vs. t-SNE — When to Choose What</div>
+            Use <strong>UMAP</strong> when: you need speed on large datasets (100K+ points), want to preserve global structure, or need to transform new unseen data. Use <strong>t-SNE</strong> when: you have smaller datasets and want the most visually distinct local clusters. In practice, UMAP has largely superseded t-SNE in production ML workflows.
+        </div>
+    </article>
+
+    <!-- ═══════════════════ SECTION 9: THE PIPELINE ═══════════════════ -->
+    <article class="concept-card">
+        <div class="section-number">Section 09</div>
+        <h2 class="concept-title">The Unsupervised Pipeline</h2>
+        <p class="concept-subtitle">Chaining Standardization → PCA → K-Means for End-to-End Unsupervised Workflows</p>
+
+        <div class="concept-body">
+            <p>In production, unsupervised learning steps are almost never used in isolation. They're chained into a <strong>pipeline</strong>—a sequence of transformations that flows data from raw features to final cluster assignments. Sklearn's <code>Pipeline</code> ensures clean, reproducible workflows with no data leakage.</p>
+
+            <p><strong>Why this specific chain?</strong></p>
+            <p><strong>1. StandardScaler:</strong> K-Means and PCA are both variance-sensitive. If "market_value" ranges 0–200M and "age" ranges 16–40, the market value dimension will completely dominate distance calculations. Standardization (z-score) puts all features on equal footing.</p>
+            <p><strong>2. PCA:</strong> Reduces dimensionality, removing noise and multicollinearity. K-Means works better in lower dimensions (curse of dimensionality). You choose components to retain ~95% variance.</p>
+            <p><strong>3. K-Means:</strong> Clusters the reduced, clean data into $K$ groups.</p>
+        </div>
+
+        <div class="diagram-container">
+            <div class="diagram-label">Complete Unsupervised ML Pipeline — Data Flow</div>
+            <div class="mermaid">
+            flowchart LR
+                A["📋 Raw Player Data<br>n=2000 players<br>p=47 features<br>(mixed scales)"] --> B["⚖️ StandardScaler<br>z = (x - μ) / σ<br>Mean=0, Var=1<br>per feature"]
+                B --> C["📐 PCA<br>47D → 8D<br>Retain 95%<br>variance"]
+                C --> D["🎯 K-Means<br>K=5 clusters<br>K-Means++<br>n_init=10"]
+                D --> E["✅ Output<br>2000 players<br>each labeled<br>Cluster 0-4"]
+                E --> F["📊 Analysis<br>Profile each cluster<br>Mean stats, radar<br>charts, scouting"]
+                style A fill:#FDECEA,stroke:#C0392B,color:#0F1A2E
+                style B fill:#FFF8E1,stroke:#D4A017,color:#0F1A2E
+                style C fill:#F5EEF8,stroke:#6C3483,color:#0F1A2E
+                style D fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E
+                style E fill:#EBF5FB,stroke:#1E3A5F,color:#0F1A2E
+                style F fill:#E8F5EC,stroke:#1B7A3D,color:#0F1A2E
+            </div>
+        </div>
+
+        <div class="football-analogy">
+            <div class="football-analogy-title">Football Analogy</div>
+            <p>This pipeline is the data science version of a professional scouting workflow. <strong>Step 1 (Scale):</strong> Convert all stats to a common currency—you can't compare raw "total passes" (800/season) with "goals" (15/season) without normalization. <strong>Step 2 (PCA):</strong> The chief scout compresses the 47-metric report into 8 "super-traits" (e.g., "Attacking Output," "Progressive Carrying," "Aerial Dominance"). <strong>Step 3 (K-Means):</strong> The recruitment team sorts all 2,000 scouted players into 5 archetypes. The result: "We need a Cluster-3 player (progressive ball-carrier with defensive workrate)—here are 47 names ranked by distance to that cluster centroid."</p>
+        </div>
+
+        <div class="code-block">
+            <span class="code-block-label">Python</span>
+            <pre><span class="keyword">from</span> sklearn.pipeline <span class="keyword">import</span> Pipeline
+<span class="keyword">from</span> sklearn.preprocessing <span class="keyword">import</span> StandardScaler
+<span class="keyword">from</span> sklearn.decomposition <span class="keyword">import</span> PCA
+<span class="keyword">from</span> sklearn.cluster <span class="keyword">import</span> KMeans
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Build the pipeline</span>
+unsupervised_pipeline = Pipeline([
+    (<span class="string">'scaler'</span>,  StandardScaler()),
+    (<span class="string">'pca'</span>,     PCA(n_components=<span class="number">0.95</span>)),   <span class="comment"># auto-select d for 95% variance</span>
+    (<span class="string">'kmeans'</span>,  KMeans(n_clusters=<span class="number">5</span>, init=<span class="string">'k-means++'</span>, 
+                      n_init=<span class="number">10</span>, random_state=<span class="number">42</span>))
+])
+
+<span class="comment"># Fit and predict in one line</span>
+cluster_labels = unsupervised_pipeline.fit_predict(X_players_raw)
+
+<span class="comment"># Inspect PCA component count</span>
+n_components = unsupervised_pipeline.named_steps[<span class="string">'pca'</span>].n_components_
+<span class="keyword">print</span>(<span class="string">f"PCA retained <span class="number">{n_components}</span> components for 95% variance"</span>)
+
+<span class="comment"># Profile the clusters</span>
+df = pd.DataFrame(X_players_raw, columns=feature_names)
+df[<span class="string">'cluster'</span>] = cluster_labels
+cluster_profiles = df.groupby(<span class="string">'cluster'</span>).mean()
+<span class="keyword">print</span>(cluster_profiles.round(<span class="number">2</span>))</pre>
+        </div>
+
+        <div class="info-box key-insight">
+            <div class="info-box-label">💡 Pipeline Advantages</div>
+            Using sklearn's <code>Pipeline</code> guarantees: (1) No data leakage—scaler/PCA fit only on training data during cross-validation. (2) Reproducibility—the entire workflow is a single serializable object. (3) Clean code—one <code>.fit_predict()</code> call replaces 6 separate steps.
+        </div>
+    </article>
+
+    <!-- ═══════════════════ INTERVIEW VAULT ═══════════════════ -->
+    <div class="interview-vault">
+        <div class="vault-header">
+            <div class="vault-icon">🎤</div>
+            <div class="vault-title-block">
+                <div class="vault-title">The Human Interview Vault</div>
+                <div class="vault-sub">5 rigorous questions — answered in the voice of a senior engineer in a live interview</div>
+            </div>
+        </div>
+
+        <div class="interview-qa">
+            <div class="interview-q">K-Means just assigned all my goalkeepers to the same cluster as my centre-backs. What went wrong?</div>
+            <div class="interview-a">Honestly, the very first thing I check every single time is scaling. If you didn't StandardScale your features, then a stat like "passes attempted" ranging from 0 to 3000 will completely drown out "goals per 90" ranging from 0 to 1.5. K-Means uses Euclidean distance, and large-magnitude features dominate that calculation. Scale first, cluster second—it's almost always the fix. If scaling doesn't help, look at whether your features actually distinguish those positions. GKs and CBs might genuinely overlap on defensive metrics; you may need to engineer features like "saves per 90" or "penalty area entries" that separate them.</div>
+        </div>
+
+        <div class="interview-qa">
+            <div class="interview-q">Why would you ever choose DBSCAN over K-Means, and what's the biggest pain point with it?</div>
+            <div class="interview-a">I'd reach for DBSCAN when I have no idea how many clusters exist, when I expect non-spherical cluster shapes, or when I know there are outliers I want flagged automatically—K-Means forces every point into a cluster, including noise. The real pain point is tuning epsilon. There's no clean "elbow" method like K-Means gives you. You end up doing a k-distance plot and eyeballing the knee, and it's sensitive—change ε by 0.1 and you can go from 3 clusters to 30. Also, DBSCAN struggles badly when clusters have very different densities, because one global ε can't serve both a tight cluster and a sparse one. HDBSCAN fixes that, and honestly, in production I usually just jump straight to HDBSCAN now.</div>
+        </div>
+
+        <div class="interview-qa">
+            <div class="interview-q">Can you use PCA and t-SNE interchangeably? When would you pick one over the other?</div>
+            <div class="interview-a">No, they solve fundamentally different problems. PCA gives you a linear, deterministic, invertible projection—I use it as a preprocessing step before feeding data into classifiers or clustering. It actually reduces dimensionality in a way downstream models can consume. t-SNE is purely a visualization tool. You cannot train on t-SNE coordinates because it's non-parametric, stochastic, and distorts global distances. My
+
+            </div></div></div></div></body></html>
